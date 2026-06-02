@@ -73,7 +73,7 @@ BOOL_COLS = ["is_hospitalized", "is_life_threat", "is_disabling"]
 TARGET    = "is_fatal"
 
 # Sampling budget — keeps memory under ~1 GB and trains all 3 models in < 45 s
-SAMPLE_N  = 150_000
+SAMPLE_N  = 50_000
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
