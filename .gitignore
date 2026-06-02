@@ -1,0 +1,26 @@
+# Data folder (big CSV file - not uploaded to GitHub)
+data/
+
+# Models folder (pkl, parquet files - not uploaded to GitHub)
+models/
+
+# Compiled Python cache files
+*.pkl
+*.parquet
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Specific compiled files
+export_models_cpython-313.pyc
+
+# Mac system file
+.DS_Store
+
+# CSV dataset (too large)
+*.csv
