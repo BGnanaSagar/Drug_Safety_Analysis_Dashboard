@@ -214,8 +214,7 @@ _CANDIDATE_PATHS = [
 
 # ── HUGGING FACE URL ───────────────────────────────────────────────────────
 # Replace YOUR_USERNAME with your actual Hugging Face username
-HF_DATASET_URL = "https://huggingface.co/datasets/bgnanasagar/fda-adverse-events/resolve/main/fda_adverse_events_2015_2026_CLEAN.csv"
-
+HF_DATASET_URL = "https://huggingface.co/datasets/bgnanasagar/fda_adverse_events/resolve/main/fda_adverse_events_2015_2026_CLEAN.csv"
 def get_resolved_data_path() -> str:
     """Dynamically resolve dataset file path on disk."""
     for _p in _CANDIDATE_PATHS:

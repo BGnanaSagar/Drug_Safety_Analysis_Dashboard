@@ -48,8 +48,7 @@ CSV_NAME   = "fda_adverse_events_2015_2026_CLEAN.csv"
 
 # ── Hugging Face Dataset URL ───────────────────────────────────────────────
 # Replace YOUR_USERNAME with your actual Hugging Face username
-HF_DATASET_URL = "https://huggingface.co/datasets/bgnanasagar/fda-adverse-events/blob/main/fda_adverse_events_2015_2026_CLEAN.csv"
-
+HF_DATASET_URL = "https://huggingface.co/datasets/bgnanasagar/fda_adverse_events/resolve/main/fda_adverse_events_2015_2026_CLEAN.csv"
 FEATURES = [
     "num_drugs",
     "num_reactions",
