@@ -1,5 +1,7 @@
 # 🧬 Drug Safety Intelligence Platform
 ### FDA FAERS (2015–2026) · Multi-Model AI (LightGBM, RF, LR) · 528,000+ Adverse Event Reports
+## 🚀 Live Demo
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://drugsafetyanalysisdashboard-h6g9tyvnmneay7vy6agcqb.streamlit.app)
 
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit v1.35+](https://img.shields.io/badge/Streamlit-v1.35+-FF4B4B.svg?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
