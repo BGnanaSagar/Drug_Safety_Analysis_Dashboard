@@ -46,6 +46,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODEL_DIR  = SCRIPT_DIR / "models"
 CSV_NAME   = "fda_adverse_events_2015_2026_CLEAN.csv"
 
+# ── Hugging Face Dataset URL ───────────────────────────────────────────────
+# Replace YOUR_USERNAME with your actual Hugging Face username
+HF_DATASET_URL = "https://huggingface.co/datasets/bgnanasagar/fda-adverse-events/blob/main/fda_adverse_events_2015_2026_CLEAN.csv"
+
 FEATURES = [
     "num_drugs",
     "num_reactions",
@@ -77,8 +81,8 @@ SAMPLE_N  = 50_000
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
-def _find_csv() -> Path:
-    """Locate the dataset CSV in common locations."""
+def _find_csv() -> Path | None:
+    """Locate the dataset CSV locally — returns None if not found."""
     candidates = [
         SCRIPT_DIR / "data" / CSV_NAME,
         SCRIPT_DIR / CSV_NAME,
@@ -87,16 +91,18 @@ def _find_csv() -> Path:
     for p in candidates:
         if p.is_file():
             return p
-    raise FileNotFoundError(
-        "Dataset CSV not found.  Looked in:\n"
-        + "\n".join(f"  • {c}" for c in candidates)
-    )
+    return None
 
 
-def _load_and_sample(path: Path, n: int) -> pd.DataFrame:
-    """Read CSV, coerce types, sample to *n* rows (stratified on target)."""
-    print(f"  Reading {path.name} …")
-    df = pd.read_csv(path, low_memory=False)
+def _load_and_sample(path: Path | None, n: int) -> pd.DataFrame:
+    """Read CSV from local path or Hugging Face, sample to n rows."""
+    if path is not None:
+        print(f"  Reading local {path.name} …")
+        df = pd.read_csv(path, low_memory=False)
+    else:
+        print(f"  Local CSV not found — loading from Hugging Face …")
+        df = pd.read_csv(HF_DATASET_URL, low_memory=False)
+
     for c in BOOL_COLS + [TARGET, "patient_recovered"]:
         if c in df.columns:
             df[c] = df[c].astype(bool)
@@ -153,7 +159,7 @@ def _train_lgbm(X_train, y_train, X_test, y_test):
         "bagging_freq": 5,
         "lambda_l1": 0.05,
         "lambda_l2": 0.05,
-        "is_unbalance": True,       # handles class imbalance
+        "is_unbalance": True,
         "seed": 42,
     }
 
@@ -178,10 +184,8 @@ def _train_lgbm(X_train, y_train, X_test, y_test):
 def _find_optimal_threshold(y_true, y_proba):
     """Pick the threshold that maximises F1 on the precision-recall curve."""
     prec, rec, thresholds = precision_recall_curve(y_true, y_proba)
-    # F1 = 2 * P * R / (P + R)
     f1 = np.where((prec + rec) == 0, 0, 2 * prec * rec / (prec + rec))
     best_idx = np.argmax(f1)
-    # Safe boundary check
     if best_idx < len(thresholds):
         return float(thresholds[best_idx])
     return 0.5
@@ -196,7 +200,10 @@ def main():
 
     # 1. Locate data
     csv_path = _find_csv()
-    print(f"\n[1/6] Dataset found: {csv_path}")
+    if csv_path:
+        print(f"\n[1/6] Dataset found locally: {csv_path}")
+    else:
+        print(f"\n[1/6] Local CSV not found — will load from Hugging Face")
 
     # 2. Load & sample
     print("[2/6] Loading data …")
@@ -245,14 +252,12 @@ def main():
     print("\n[6/6] Exporting artifacts …")
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Serializations
     joblib.dump(lgb_model,   MODEL_DIR / "lgbm_model.pkl")
     joblib.dump(rf_model,    MODEL_DIR / "rf_model.pkl")
     joblib.dump(lr_model,    MODEL_DIR / "lr_model.pkl")
     joblib.dump(le_dict,     MODEL_DIR / "label_encoders.pkl")
     joblib.dump(lgb_thresh,  MODEL_DIR / "optimal_threshold.pkl")
-    
-    # Combined threshold directory
+
     thresholds = {
         "LightGBM": lgb_thresh,
         "Random Forest": rf_thresh,
@@ -261,16 +266,14 @@ def main():
     joblib.dump(thresholds,  MODEL_DIR / "optimal_thresholds.pkl")
     joblib.dump(FEATURES,    MODEL_DIR / "feature_list.pkl")
 
-    # Save test results containing all predictions
     test_results = X_test.copy()
     test_results["y_true"] = y_test.values
-    test_results["y_pred_proba"] = lgb_proba # default for legacy compat
+    test_results["y_pred_proba"] = lgb_proba
     test_results["y_pred_proba_lgbm"] = lgb_proba
     test_results["y_pred_proba_rf"] = rf_proba
     test_results["y_pred_proba_lr"] = lr_proba
     test_results.to_parquet(MODEL_DIR / "test_results.parquet", index=False)
 
-    # Save feature importances
     feat_imp = pd.DataFrame({
         "feature": FEATURES,
         "importance_lgbm": lgb_model.feature_importance(importance_type="gain"),
